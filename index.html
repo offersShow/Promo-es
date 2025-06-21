@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Promoções - Livros Digitais</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f4f4f4;
+      color: #333;
+    }
+    header {
+      background-color: #6200ea;
+      color: #fff;
+      padding: 2rem;
+      text-align: center;
+    }
+    header h1 {
+      margin: 0;
+    }
+    .banner {
+      background-color: #ffe9ec;
+      text-align: center;
+      padding: 2rem;
+    }
+    .banner h2 {
+      color: #d1005b;
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+    .container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      padding: 2rem;
+    }
+    .ebook {
+      background-color: #fff;
+      padding: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    .ebook img {
+      max-width: 100%;
+      height: 200px;
+      object-fit: cover;
+      border-radius: 6px;
+    }
+    .ebook h2 {
+      font-size: 1.2rem;
+      margin: 0.5rem 0;
+    }
+    .price {
+      color: #6200ea;
+      font-weight: bold;
+      margin: 0.5rem 0;
+    }
+    .btn {
+      background-color: #6200ea;
+      color: #fff;
+      border: none;
+      padding: 0.6rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .btn:hover {
+      background-color: #4b00b3;
+    }
+    footer {
+      background-color: #eee;
+      text-align: center;
+      padding: 1rem;
+      margin-top: 2rem;
+    }
+    .filtro {
+      text-align: center;
+      margin-top: 1rem;
+    }
+    .filtro input {
+      padding: 0.5rem;
+      width: 300px;
+      max-width: 80%;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Promoções da Semana</h1>
+    <p>🔥Descontos imperdíveis em títulos selecionados. Aproveite agora mesmo!🔥 </p>
+  </header>
+
+  <!-- Filtro por título -->
+  <div class="filtro">
+    <input type="text" id="busca" placeholder="Buscar e-book promocional por título...">
+  </div>
+
+  <!-- Lista de produtos promocionais -->
+  <main class="container produtos-promocionais" id="products"></main>
+
+  <footer>
+    &copy; 2025 - Todos os direitos reservados.
+  </footer>
+
+  <script>
+    const sheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQHFn_XdGiw72WOZC80nJuPZH7tRqsgZbPl10GndaFwTbVnLyznv9CY4eZGGEXCChJOG6mOQ-n0dqoJ/pubhtml?gid=0&single=true';
+
+    function normalizarTexto(texto) {
+      return texto.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+    }
+
+    fetch(sheetURL)
+      .then(res => res.text())
+      .then(html => {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const rows = [...doc.querySelectorAll('table tbody tr')];
+        const container = document.getElementById("products");
+        const produtos = [];
+	
+        rows.slice(1).forEach(row => {
+          const cols = row.querySelectorAll('td');
+          if (cols.length >= 4) {
+            const titulo = cols[0].innerText.trim();
+            const imagem = cols[1].innerText.trim();
+            const preco = cols[2].innerText.trim();
+            const link = cols[3].innerText.trim();
+
+            const div = document.createElement("div");
+            div.className = "ebook";
+            div.innerHTML = `
+              <img src="${imagem}" alt="${titulo}" />
+              <h2>${titulo}</h2>
+              <p class="price">R$ ${preco}</p>
+              <button class="btn" onclick="window.location.href='${link}'">Comprar</button>
+            `;
+
+            produtos.push({ titulo, div });
+            container.appendChild(div);
+          }
+        });
+
+        document.getElementById("busca").addEventListener("input", function () {
+          const termo = normalizarTexto(this.value);
+          container.innerHTML = "";
+          produtos.forEach(prod => {
+            if (normalizarTexto(prod.titulo).includes(termo)) {
+              container.appendChild(prod.div);
+            }
+          });
+        });
+      })
+      .catch(error => {
+        console.error('Erro ao carregar a planilha HTML:', error);
+      });
+  </script>
+</body>
+</html>
